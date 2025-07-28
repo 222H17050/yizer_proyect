@@ -1,0 +1,88 @@
+/* Navbar Container */
+.navbar {
+  background-color: #2d3748;
+  color: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 10px;
+}
+
+/* Logo/Título */
+.navbar-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: white;
+}
+
+/* Lista de Navegación */
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 1.5rem;
+}
+
+/* Items del Navbar */
+.nav-item {
+  position: relative;
+}
+
+/* Enlaces */
+.nav-link {
+  color: #e2e8f0;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  transition: color 0.2s;
+  display: inline-block;
+}
+
+.nav-link:hover {
+  color: white;
+}
+
+/* Efecto activo (opcional) */
+.nav-link.active {
+  color: white;
+  font-weight: 600;
+}
+
+/* Indicador de hover */
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #4299e1;
+  transition: width 0.3s;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
+  }
+  
+  .nav-list {
+    width: 100%;
+    justify-content: space-around;
+    gap: 0.5rem;
+  }
+  
+  .nav-link {
+    font-size: 0.9rem;
+  }
+}
