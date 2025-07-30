@@ -9,7 +9,6 @@ const router = Router();
 
 router.get("/order", getOrder);
 
-
 router.put("/order/:id", deleteOrder);
 
 router.delete("/order/:id", updateOrder);
