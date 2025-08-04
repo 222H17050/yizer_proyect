@@ -3,24 +3,24 @@ import { pool } from '../db.js';
 // --- 1. Crear un nuevo cliente (POST) ---
 export const createClient = async (req, res) => {
   try {
-    const { nombre, correo, contraseña, telefono, direccion } = req.body;
+    const { nombre, correo, contraseña, telefono } = req.body;
 
     // Validar que todos los campos requeridos estén presentes
-    if (!nombre || !correo || !contraseña || !telefono || !direccion) {
+    if (!nombre || !correo || !contraseña || !telefono) {
       return res.status(400).json({
         success: false,
-        message: 'Todos los campos (nombre, correo, contraseña, telefono, direccion) son requeridos'
+        message: 'Todos los campos (nombre, correo, contraseña, telefono) son requeridos'
       });
     }
     // Insertar el nuevo cliente en la base de datos
     const [result] = await pool.query(
-      "INSERT INTO cliente (nombre, correo, contraseña, telefono, direccion) VALUES (?, ?, ?, ?, ?)",
-      [nombre, correo, contraseña, telefono, direccion] // Usar hashedPassword aquí si implementas bcrypt
+      "INSERT INTO cliente (nombre, correo, contraseña, telefono) VALUES (?, ?, ?, ?)",
+      [nombre, correo, contraseña, telefono] // Usar hashedPassword aquí si implementas bcrypt
     );
 
     // Obtener el cliente recién creado (sin la contraseña)
     const [rows] = await pool.query(
-      "SELECT id_cliente, nombre, correo, telefono, direccion FROM cliente WHERE id_cliente = ?",
+      "SELECT id_cliente, nombre, correo, telefono FROM cliente WHERE id_cliente = ?",
       [result.insertId]
     );
 
@@ -52,7 +52,7 @@ export const createClient = async (req, res) => {
 // --- 2. Obtener todos los clientes (GET) ---
 export const getClients = async (req, res) => {
   try {
-    const [rows] = await pool.query("SELECT id_cliente, nombre, correo, telefono, direccion FROM cliente");
+    const [rows] = await pool.query("SELECT id_cliente, nombre, correo, telefono FROM cliente");
     res.json({
       success: true,
       message: 'Clientes obtenidos exitosamente',
@@ -73,7 +73,7 @@ export const getClientById = async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query(
-      "SELECT id_cliente, nombre, correo, telefono, direccion FROM cliente WHERE id_cliente = ?",
+      "SELECT id_cliente, nombre, correo, telefono FROM cliente WHERE id_cliente = ?",
       [id]
     );
 
@@ -104,7 +104,7 @@ export const getClientById = async (req, res) => {
 export const updateClient = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, correo, contraseña, telefono, direccion } = req.body;
+    const { nombre, correo, contraseña, telefono } = req.body;
     const fields = [];
     const values = [];
 
@@ -123,10 +123,6 @@ export const updateClient = async (req, res) => {
     if (telefono) {
       fields.push("telefono = ?");
       values.push(telefono);
-    }
-    if (direccion) {
-      fields.push("direccion = ?");
-      values.push(direccion);
     }
 
     if (fields.length === 0) {
@@ -152,7 +148,7 @@ export const updateClient = async (req, res) => {
 
     // Obtener el cliente actualizado (sin la contraseña)
     const [rows] = await pool.query(
-      "SELECT id_cliente, nombre, correo, telefono, direccion FROM cliente WHERE id_cliente = ?",
+      "SELECT id_cliente, nombre, correo, telefono FROM cliente WHERE id_cliente = ?",
       [id]
     );
 
@@ -225,7 +221,7 @@ export const verifyClient = async (req, res) => {
 
     // Buscar el cliente en la base de datos
     const [rows] = await pool.query(
-      "SELECT id_cliente, nombre, correo, contraseña, telefono, direccion FROM cliente WHERE correo = ?",
+      "SELECT id_cliente, nombre, correo, contraseña, telefono FROM cliente WHERE correo = ?",
       [correo]
     );
 
@@ -252,7 +248,6 @@ export const verifyClient = async (req, res) => {
       nombre: client.nombre,
       correo: client.correo,
       telefono: client.telefono,
-      direccion: client.direccion
     };
 
     res.json({

@@ -16,6 +16,15 @@ interface Producto {
   variantes: Variante[];
 }
 
+interface Perzonalizable {
+  id_producto: string;
+  nombre: string;
+  modelo: string;
+  precio_base: number;
+  descripcion: string;
+  variantes: Variante[];
+}
+
 // Interfaz para los datos del cliente que vas a enviar (ej. para crear o verificar)
 interface ClientAuthData {
   correo: string;
@@ -23,12 +32,11 @@ interface ClientAuthData {
 }
 
 // Interfaz para los datos completos del cliente que devuelve el servidor (sin contraseña)
-interface ClientData {
+export interface ClientData {
   id_cliente: string; // O number, según tu DB
   nombre: string;
   correo: string;
-  telefono: string;
-  direccion: string; // Ahora es string, como lo modificamos en la DB
+  telefono: string;// Ahora es string, como lo modificamos en la DB
   // Agrega otras propiedades si tu servidor las devuelve al autenticar o crear
 }
 
@@ -37,11 +45,10 @@ interface ClientData {
 interface ClientCreateData extends ClientAuthData {
   nombre: string;
   telefono: string;
-  direccion: string;
 }
 
 // Interfaz genérica para la respuesta de la API (success, message, data)
-interface ApiResponse<T> {
+export interface ApiResponse<T> {
   success: boolean;
   message: string;
   data?: T; // data es opcional y puede ser de cualquier tipo T
@@ -60,9 +67,19 @@ export const apiClient = axios.create({
 // --- Funciones para interactuar con la API de Productos ---
 
 // Obtener todos los productos
-export const getAllProducts = async (): Promise<Producto[]> => {
+export const getCatalogStandard = async (): Promise<Producto[]> => {
   try {
-    const response = await apiClient.get('/products');
+    const response = await apiClient.get('/catalog/standard');
+    return response.data; // TypeScript inferirá que es Producto[] si tu backend lo devuelve así
+  } catch (error) {
+    console.error('Error fetching all products:', error);
+    throw error;
+  }
+};
+
+export const getCatalogCustomizable = async (): Promise<Producto[]> => {
+  try {
+    const response = await apiClient.get('/catalog/customizable');
     return response.data; // TypeScript inferirá que es Producto[] si tu backend lo devuelve así
   } catch (error) {
     console.error('Error fetching all products:', error);

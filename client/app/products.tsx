@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
-import { getAllProducts } from '../api/client';
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Image } from 'react-native';
+import { getCatalogStandard } from '../api/client';
+import { useAuth } from '../authentication/AuthContext';
 
 interface Variante {
   id_variante: string;
@@ -15,25 +16,42 @@ interface Producto {
   modelo: string;
   precio_base: number;
   descripcion: string;
+  imagen_url: string; // Cambiado de image_url a imagen_url
   variantes: Variante[];
 }
 
-export default function DataScreen() {
+export default function StandardProductsScreen() {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Text>No tienes permiso para ver esto.</Text>
+  }
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;  // Para evitar actualizar estado si el componente se desmontó
+
     const loadData = async () => {
       try {
-        const result: Producto[] = await getAllProducts(); // Usa la nueva función 
-        setProductos(result);
+        const result = await getCatalogStandard();
+        if (isMounted) {
+          setProductos(result);
+        }
       } catch (error) {
-        console.error('Error cargando productos:', error);
+        console.error('Error cargando productos estándar:', error);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
+
     loadData();
+
+    return () => {
+      isMounted = false;  // Limpieza al desmontar
+    };
   }, []);
 
   if (loading) {
@@ -42,8 +60,15 @@ export default function DataScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      {productos.map((producto: Producto) => (
+      {productos.map((producto) => (
         <View key={producto.id_producto} style={styles.productoContainer}>
+          {producto.imagen_url && (
+            <Image
+              source={{ uri: `http://localhost:4000${producto.imagen_url}` }}
+              style={styles.productImage}
+              resizeMode="contain"
+            />
+          )}
           <Text style={styles.nombre}>{producto.nombre}</Text>
           <Text>Modelo: {producto.modelo}</Text>
           <Text>Precio: ${producto.precio_base}</Text>
@@ -51,7 +76,7 @@ export default function DataScreen() {
 
           <Text style={styles.subtitle}>Variantes:</Text>
           {producto.variantes && producto.variantes.length > 0 ? (
-            producto.variantes.map((variante: Variante) => (
+            producto.variantes.map((variante) => (
               <View key={variante.id_variante} style={styles.varianteContainer}>
                 <Text>Talla: {variante.talla}</Text>
                 <Text>Color: {variante.color}</Text>
@@ -86,6 +111,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  productImage: {
+    width: '100%',
+    height: 200,
+    marginBottom: 12,
+    borderRadius: 4,
   },
   nombre: {
     fontSize: 18,
