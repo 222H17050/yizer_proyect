@@ -1,8 +1,8 @@
 import { useFormik } from 'formik';
 import axios from 'axios';
 import * as Yup from 'yup';
+import { useState } from 'react';
 
-// Definición de tipos para TypeScript
 type Variant = {
   talla: string;
   color: string;
@@ -19,7 +19,10 @@ type FormValues = {
   variantes: Variant[];
 };
 
-function ProductsPage() {
+function CreateProductPage() {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
   const productSchema = Yup.object().shape({
     nombre: Yup.string().required('El nombre es requerido'),
     modelo: Yup.string().required('El modelo es requerido'),
@@ -38,6 +41,21 @@ function ProductsPage() {
     ).min(1, 'Debe haber al menos una variante')
   });
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      setSelectedFile(file);
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setPreviewImage(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const formik = useFormik<FormValues>({
     initialValues: {
       nombre: '',
@@ -51,15 +69,57 @@ function ProductsPage() {
     validationSchema: productSchema,
     onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        const response = await axios.post('http://localhost:4000/products', {
-          ...values,
-          disponible: values.disponible ? 1 : 0
+        const formData = new FormData();
+
+        // Agregar campos como strings
+        formData.append('nombre', values.nombre);
+        formData.append('modelo', values.modelo);
+        formData.append('tipo', values.tipo);
+        formData.append('descripcion', values.descripcion);
+        formData.append('precio_base', values.precio_base);
+        formData.append('disponible', values.disponible ? '1' : '0');
+
+
+        // Validar y preparar variantes
+        const validatedVariantes = values.variantes.map(v => ({
+          talla: v.talla || '',
+          color: v.color || '',
+          stock: Number(v.stock) || 0
+        }));
+
+        // Agregar como string JSON
+        formData.append('variantes', JSON.stringify(validatedVariantes));
+
+
+        // Campo de archivo debe llamarse 'image' (igual que en Multer)
+        if (selectedFile) {
+          formData.append('image', selectedFile);
+        }
+
+        // Depuración: mostrar contenido de FormData
+        for (const [key, value] of formData.entries()) {
+          console.log(key, value);
+        }
+
+        const response = await axios.post('http://localhost:4000/products', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         });
 
         alert(`Producto creado con ID: ${response.data.id}`);
         resetForm();
+        setSelectedFile(null);
+        setPreviewImage(null);
       } catch (error) {
-        alert(`Error al crear el producto: ${error instanceof Error ? error.message : String(error)}`);
+        console.error('Error detallado:', error);
+
+        if (axios.isAxiosError(error)) {
+          console.error('Respuesta del servidor:', error.response?.data);
+          alert(`Error al crear el producto: ${error.response?.data?.message || error.message}`);
+        } else {
+          alert(`Error al crear el producto: ${error instanceof Error ? error.message : String(error)}`);
+        }
       } finally {
         setSubmitting(false);
       }
@@ -98,6 +158,28 @@ function ProductsPage() {
           />
           {formik.touched.nombre && formik.errors.nombre && (
             <div className="form-error">{formik.errors.nombre}</div>
+          )}
+        </div>
+
+        {/* Campo para subir imagen */}
+        <div className="form-field">
+          <label htmlFor="image" className="form-label">Imagen del Producto:</label>
+          <input
+            id="image"
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="form-input"
+          />
+          {previewImage && (
+            <div className="image-preview">
+              <img
+                src={previewImage}
+                alt="Vista previa"
+                style={{ maxWidth: '200px', maxHeight: '200px', marginTop: '10px' }}
+              />
+            </div>
           )}
         </div>
 
@@ -185,12 +267,12 @@ function ProductsPage() {
           </label>
         </div>
 
-        {/* Sección de Variantes */}
+        {/* Sección de Variantes - Asegúrate de agregar key única */}
         <div className="variants-section">
           <h2 className="variants-title">Variantes</h2>
 
           {formik.values.variantes.map((variant, index) => (
-            <div key={index} className="variant-card">
+            <div key={`variant-${index}`} className="variant-card">
               <div className="variant-header">
                 <h3 className="variant-number">Variante #{index + 1}</h3>
                 {formik.values.variantes.length > 1 && (
@@ -275,4 +357,4 @@ function ProductsPage() {
   );
 }
 
-export default ProductsPage;
+export default CreateProductPage;

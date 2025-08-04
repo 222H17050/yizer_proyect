@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, ScrollView } from 'react-native';
-import { fetchData } from '../api/client';
+import { getAllProducts } from '../api/client';
 
 interface Variante {
   id_variante: string;
@@ -25,12 +25,11 @@ export default function DataScreen() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const result: Producto[] = await fetchData();
+        const result: Producto[] = await getAllProducts(); // Usa la nueva función 
         setProductos(result);
       } catch (error) {
         console.error('Error cargando productos:', error);
-      } // <-- ¡Elimina el punto aquí!
-      finally { // <-- Así es como se usa 'finally'
+      } finally {
         setLoading(false);
       }
     };
@@ -49,7 +48,7 @@ export default function DataScreen() {
           <Text>Modelo: {producto.modelo}</Text>
           <Text>Precio: ${producto.precio_base}</Text>
           <Text>Descripción: {producto.descripcion}</Text>
-          
+
           <Text style={styles.subtitle}>Variantes:</Text>
           {producto.variantes && producto.variantes.length > 0 ? (
             producto.variantes.map((variante: Variante) => (

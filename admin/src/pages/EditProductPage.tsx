@@ -2,9 +2,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useFormik } from 'formik';
 import axios from 'axios';
 import * as Yup from 'yup';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-// Definición de tipos (los mismos que en ProductsPage)
 type Variant = {
     id_variante?: number;
     talla: string;
@@ -25,8 +24,10 @@ type FormValues = {
 function EditProductPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [currentImage, setCurrentImage] = useState<string | null>(null);
 
-    // Esquema de validación (igual que en ProductsPage)
     const productSchema = Yup.object().shape({
         nombre: Yup.string().required('El nombre es requerido'),
         modelo: Yup.string().required('El modelo es requerido'),
@@ -45,6 +46,21 @@ function EditProductPage() {
         ).min(1, 'Debe haber al menos una variante')
     });
 
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files && event.target.files[0]) {
+            const file = event.target.files[0];
+            setSelectedFile(file);
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (e.target?.result) {
+                    setPreviewImage(e.target.result as string);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const formik = useFormik<FormValues>({
         initialValues: {
             nombre: '',
@@ -58,44 +74,68 @@ function EditProductPage() {
         validationSchema: productSchema,
         onSubmit: async (values, { setSubmitting }) => {
             try {
-                // Preparar datos para el update
-                const updateData = {
-                    ...values,
-                    precio_base: parseFloat(values.precio_base),
-                    disponible: values.disponible, // ya es booleano
-                    variantes: values.variantes.map(v => ({
-                        ...v,
-                        stock: parseInt(v.stock),
-                        // Mantener id_variante si existe
-                        ...(v.id_variante && { id_variante: v.id_variante })
-                    }))
-                };
+                const formData = new FormData();
 
-                // Actualizar producto
+                // Agregar campos normales
+                formData.append('nombre', values.nombre);
+                formData.append('modelo', values.modelo);
+                formData.append('tipo', values.tipo);
+                formData.append('descripcion', values.descripcion);
+                formData.append('precio_base', values.precio_base);
+                formData.append('disponible', values.disponible ? '1' : '0');
+
+                // Preparar variantes con el formato exacto que espera el backend
+                const validatedVariantes = values.variantes.map(v => ({
+                    id_variante: v.id_variante || null, // Asegurar que sea null si no existe
+                    talla: v.talla,
+                    color: v.color,
+                    stock: v.stock
+                }));
+
+                // IMPORTANTE: Usar exactamente 'variantes' como key
+                formData.append('variantes', JSON.stringify(validatedVariantes));
+
+                // Agregar archivo si existe
+                if (selectedFile) {
+                    formData.append('image', selectedFile);
+                }
+
+                // Depuración
+                console.log('Enviando variantes:', validatedVariantes);
+                for (const [key, value] of formData.entries()) {
+                    console.log(key, value);
+                }
+
                 const response = await axios.put(
                     `http://localhost:4000/products/${id}`,
-                    updateData
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    }
                 );
 
                 alert('Producto actualizado correctamente');
                 navigate('/inventory');
             } catch (error) {
                 console.error('Error completo:', error);
-                alert(`Error al actualizar el producto: ${error.response?.data?.message || error.message}`);
+                alert(`Error al actualizar el producto: ${error instanceof Error ? error.message : String(error)}`);
             } finally {
                 setSubmitting(false);
             }
         }
     });
 
-    // Cargar los datos del producto al montar el componente
     useEffect(() => {
         const loadProduct = async () => {
             try {
                 const response = await axios.get(`http://localhost:4000/products/${id}`);
                 const productData = response.data;
 
-                // Transformar los datos para el formulario
+                setCurrentImage(productData.imagen_url ?
+                    `http://localhost:4000${productData.imagen_url}` : null);
+
                 formik.setValues({
                     nombre: productData.nombre,
                     modelo: productData.modelo,
@@ -120,7 +160,6 @@ function EditProductPage() {
         loadProduct();
     }, [id]);
 
-    // Funciones para manejar variantes (igual que en ProductsPage)
     const addVariant = () => {
         formik.setFieldValue('variantes', [
             ...formik.values.variantes,
@@ -134,12 +173,38 @@ function EditProductPage() {
         formik.setFieldValue('variantes', newVariants);
     };
 
-    // Renderizado del formulario (igual que en ProductsPage)
     return (
         <div className="form-container">
             <h1 className="form-title">Editar Producto</h1>
-            {/* Campos del formulario */}
             <form onSubmit={formik.handleSubmit} className="product-form">
+                {/* Campo para subir imagen */}
+                <div className="form-field">
+                    <label htmlFor="image" className="form-label">Imagen del Producto:</label>
+                    <input
+                        id="image"
+                        name="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="form-input"
+                    />
+                    {(previewImage || currentImage) && (
+                        <div className="image-preview">
+                            <img
+                                src={previewImage || currentImage || ''}
+                                alt="Vista previa"
+                                style={{
+                                    maxWidth: '200px',
+                                    maxHeight: '200px',
+                                    marginTop: '10px',
+                                    objectFit: 'cover'
+                                }}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* Resto de campos del formulario (igual que antes) */}
                 <div className="form-field">
                     <label htmlFor="nombre" className="form-label">Nombre:</label>
                     <input
@@ -321,6 +386,7 @@ function EditProductPage() {
                     </button>
                 </div>
 
+
                 <div className="form-actions">
                     <button
                         type="submit"
@@ -329,7 +395,6 @@ function EditProductPage() {
                     >
                         {formik.isSubmitting ? 'Actualizando...' : 'Actualizar Producto'}
                     </button>
-
                     <button
                         type="button"
                         onClick={() => navigate('/inventory')}

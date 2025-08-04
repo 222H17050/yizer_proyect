@@ -6,7 +6,7 @@ import {
   updateClient,
   deleteClient,
   verifyClient
-} from '../controllers/clientes.controllers.js'; // Ajusta la ruta si es necesario
+} from '../controllers/clients.controllers.js'; // Ajusta la ruta si es necesario
 
 const router = Router();
 

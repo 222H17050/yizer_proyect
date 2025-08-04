@@ -8,7 +8,10 @@ export default function HomeScreen() {
       <Text>Home Screen</Text>
       {/* Usa Link para navegar */}
       <Link href="/profile" asChild>
-        <Button title="Ir al perfil" />
+        <Button title="Ver Productos" />
+      </Link>
+      <Link href="/login" asChild>
+        <Button title="Iniciar sesion" />
       </Link>
     </View>
   );

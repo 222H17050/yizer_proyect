@@ -17,6 +17,7 @@ interface Product {
     descripcion: string;
     precio_base: number;
     disponible: boolean;
+    imagen_url: string | null;
     variantes: Variant[];
 }
 
@@ -71,6 +72,7 @@ function InventoryPage() {
                 <table className="table">
                     <thead className="header">
                         <tr>
+                            <th className="th">Imagen</th>
                             <th className="th">Producto</th>
                             <th className="th">Modelo</th>
                             <th className="th">Precio</th>
@@ -83,17 +85,34 @@ function InventoryPage() {
                         {products.map((product) => (
                             <>
                                 <tr key={`prod-${product.id_producto}`} className="product-row">
+                                    <td className="td">
+                                        {product.imagen_url ? (
+                                            <img
+                                                src={`http://localhost:4000${product.imagen_url}`}
+                                                alt={product.nombre}
+                                                className="product-image"
+                                                style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    objectFit: 'cover',
+                                                    borderRadius: '4px'
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="no-image">Sin imagen</div>
+                                        )}
+                                    </td>
                                     <td className="td font-medium">{product.nombre}</td>
                                     <td className="td">{product.modelo}</td>
                                     <td className="td">${product.precio_base}</td>
                                     <td className="td">
-                                        <span className={`status ${product.variantes.length > 0 && product.variantes.some(v => v.stock > 0)
+                                        <span className={`status ${product.disponible && product.variantes.some(v => v.stock > 0)
                                             ? 'available'
                                             : 'sold-out'
                                             }`}>
-                                            {product.variantes.length > 0 && product.variantes.some(v => v.stock > 0)
+                                            {product.disponible  && product.variantes.some(v => v.stock > 0)
                                                 ? 'Disponible'
-                                                : 'Agotado'}
+                                                : 'No Disponible'}
                                         </span>
                                     </td>
                                     <td className="td">
