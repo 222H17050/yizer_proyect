@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 export const getCatalogCustomizable = async (req, res) => {
 
   try {
-    const [products] = await pool.query('SELECT * FROM producto WHERE tipo = "perzonalizable"')
+    const [products] = await pool.query('SELECT * FROM producto WHERE tipo = "perzonalizable" AND disponible = 1')
 
     for (const product of products) {
       const [variantes] = await pool.query(
@@ -36,7 +36,7 @@ export const getCatalogCustomizable = async (req, res) => {
 
 export const getCatalogStandard = async (req, res) => {
   try {
-    const [products] = await pool.query('SELECT * FROM producto WHERE tipo = "estandar"')
+    const [products] = await pool.query('SELECT * FROM producto WHERE tipo = "estandar" AND disponible = 1')
 
     for (const product of products) {
       const [variantes] = await pool.query(

@@ -14,15 +14,7 @@ interface Producto {
   precio_base: number;
   descripcion: string;
   variantes: Variante[];
-}
-
-interface Perzonalizable {
-  id_producto: string;
-  nombre: string;
-  modelo: string;
-  precio_base: number;
-  descripcion: string;
-  variantes: Variante[];
+  imagen_url: string;
 }
 
 // Interfaz para los datos del cliente que vas a enviar (ej. para crear o verificar)
@@ -45,6 +37,42 @@ export interface ClientData {
 interface ClientCreateData extends ClientAuthData {
   nombre: string;
   telefono: string;
+}
+
+// Interface for the data to send when creating a cart item
+interface CartCreateData {
+  id_cliente: string;
+  id_producto: string;
+  cantidad: number;
+  direccion: string;
+  detalles_pedido?: {
+    posicion: string;
+    tamaño: string;
+    notas: string;
+    precio_extra: number;
+  };
+}
+
+// Interface for the data returned by the API after creating a cart item
+interface CartCreateResponse {
+  id_pedido: number;
+  costo_total: number;
+  id_producto: string;
+  cantidad: number;
+}
+
+// Interface for a single item in the cart returned by the API
+export interface CartItem {
+  cantidad: number;
+  costo_total: number;
+  nombre_producto: string;
+  imagen_url: string;
+  precio_unitario: number;
+  estado: string;
+  detalles_posicion?: string;
+  detalles_tamano?: string;
+  detalles_notas?: string;
+  detalles_precio_extra?: number;
 }
 
 // Interfaz genérica para la respuesta de la API (success, message, data)
@@ -87,11 +115,11 @@ export const getCatalogCustomizable = async (): Promise<Producto[]> => {
   }
 };
 
-// Obtener un producto por ID
-export const getProductById = async (): Promise<Producto> => {
+// Agrega esta función al final del archivo client.ts
+export const getFromCatalog = async (id: string): Promise<Producto> => {
   try {
-    const response = await apiClient.get(`/products/${id}`);
-    return response.data; // TypeScript inferirá que es Producto
+    const response = await apiClient.get(`/catalog/${id}`);
+    return response.data;
   } catch (error) {
     console.error(`Error fetching product with ID ${id}:`, error);
     throw error;
@@ -126,6 +154,41 @@ export const createClient = async (clientData: ClientCreateData): Promise<ApiRes
     return response.data; // El servidor debería devolver ApiResponse<ClientData>
   } catch (error: any) {
     console.error('Error creating client:', error);
+    if (error.response && error.response.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
+};
+
+// --- Funciones para interactuar con la API de Carrito ---
+
+// Función para crear un nuevo ítem en el carrito
+export const createCartItem = async (cartData: CartCreateData): Promise<ApiResponse<CartCreateResponse>> => {
+  try {
+    const response = await apiClient.post('/cart', cartData);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error creating cart item:', error);
+    if (error.response && error.response.data) {
+      return error.response.data;
+    }
+    throw error;
+  }
+};
+
+// Función para obtener el carrito de un cliente por su ID
+export const getCartByClient = async (id_cliente: string): Promise<ApiResponse<CartItem[]>> => {
+  try {
+    const response = await apiClient.get(`/cart/${id_cliente}`);
+    // La API devuelve un objeto con la propiedad `cart`
+    // Necesitas acceder a `response.data.cart` para obtener el array de ítems
+    return {
+      ...response.data,
+      data: response.data.cart,
+    };
+  } catch (error: any) {
+    console.error(`Error fetching cart for client ID ${id_cliente}:`, error);
     if (error.response && error.response.data) {
       return error.response.data;
     }

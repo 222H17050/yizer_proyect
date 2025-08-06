@@ -1,8 +1,6 @@
 import { Stack } from "expo-router";
-import { AuthProvider } from '../authentication/AuthContext'
-import DropdownMenu from '../components/DropdownMenu'; 
-
-
+import { AuthProvider } from '../authentication/AuthContext';
+import DropdownMenu from '../components/DropdownMenu';
 
 export default function RootLayout() {
   return (
@@ -11,7 +9,7 @@ export default function RootLayout() {
         <Stack.Screen
           name="index"
           options={{
-            headerShown: false, // ← Oculta el header para esta pantalla
+            headerShown: false,
           }}
         />
         <Stack.Screen

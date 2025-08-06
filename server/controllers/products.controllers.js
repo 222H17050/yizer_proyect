@@ -194,7 +194,7 @@ export const updateProduct = async (req, res) => {
         req.body.tipo,
         req.body.descripcion,
         parseFloat(req.body.precio_base),
-        req.body.disponible ? 1 : 0,
+        req.body.disponible,
         imagen_url,
         req.params.id
       ]

@@ -6,7 +6,8 @@ import orderRoutes from './routes/order.routes.js';
 import productsRoutes from './routes/products.routes.js';
 import adminRoutes from './routes/admins.routes.js';
 import clientRoutes from './routes/clients.routes.js';
-import catalogRoutes from './routes/catalog.routes.js'
+import catalogRoutes from './routes/catalog.routes.js';
+import cartRoutes from './routes/cart.routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -33,6 +34,7 @@ app.use(productsRoutes);
 app.use(adminRoutes);
 app.use(clientRoutes);
 app.use(catalogRoutes);
+app.use(cartRoutes);
 
 app.listen(PORT);
 console.log(`Se esta ejecutando en el puerto ${PORT}`);

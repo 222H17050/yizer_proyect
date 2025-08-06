@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, ScrollView, Image, Pressable } from 'react-native';
 import { getCatalogCustomizable } from '../api/client';
 import { useAuth } from '../authentication/AuthContext';
+import { useRouter } from 'expo-router'; // ¡Cambio aquí! Usa useRouter
 
 interface Variante {
   id_variante: string;
@@ -16,11 +17,12 @@ interface Producto {
   modelo: string;
   precio_base: number;
   descripcion: string;
-  imagen_url: string ; // Cambiado de image_url a imagen_url
+  imagen_url: string; // Cambiado de image_url a imagen_url
   variantes: Variante[];
 }
 
 export default function CustomizableProductsScreenc() {
+  const router = useRouter();
   const { user } = useAuth();
 
   if (!user) {
@@ -29,7 +31,7 @@ export default function CustomizableProductsScreenc() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
 
- useEffect(() => {
+  useEffect(() => {
     let isMounted = true;  // Para evitar actualizar estado si el componente se desmontó
 
     const loadData = async () => {
@@ -63,29 +65,21 @@ export default function CustomizableProductsScreenc() {
       {productos.map((producto) => (
         <View key={producto.id_producto} style={styles.productoContainer}>
           {producto.imagen_url && (
-            <Image 
+            <Image
               source={{ uri: `http://localhost:4000${producto.imagen_url}` }}
               style={styles.productImage}
               resizeMode="contain"
             />
           )}
           <Text style={styles.nombre}>{producto.nombre}</Text>
-          <Text>Modelo: {producto.modelo}</Text>
+          <Text>{producto.descripcion}</Text>
           <Text>Precio: ${producto.precio_base}</Text>
-          <Text>Descripción: {producto.descripcion}</Text>
-
-          <Text style={styles.subtitle}>Variantes:</Text>
-          {producto.variantes && producto.variantes.length > 0 ? (
-            producto.variantes.map((variante) => (
-              <View key={variante.id_variante} style={styles.varianteContainer}>
-                <Text>Talla: {variante.talla}</Text>
-                <Text>Color: {variante.color}</Text>
-                <Text>Stock: {variante.stock}</Text>
-              </View>
-            ))
-          ) : (
-            <Text>No hay variantes disponibles.</Text>
-          )}
+          <Pressable
+            style={styles.addToCartButton}
+            onPress={() => router.push(`/${producto.id_producto}`)} // ¡Cambio aquí! Usa router.push
+          >
+            <Text style={styles.buttonText}>Agregar al carrito</Text>
+          </Pressable>
         </View>
       ))}
     </ScrollView>
@@ -136,5 +130,25 @@ const styles = StyleSheet.create({
     padding: 8,
     borderLeftWidth: 3,
     borderLeftColor: '#ddd',
+  },
+  variantesContainer: {
+    marginVertical: 10,
+  },
+  listaContainer: {
+    marginBottom: 8,
+  },
+  listaTitulo: {
+    fontWeight: 'bold',
+  },
+  addToCartButton: {
+    backgroundColor: '#2a9d8f',
+    padding: 12,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });

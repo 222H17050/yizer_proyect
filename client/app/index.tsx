@@ -72,6 +72,7 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <Text style={styles.yizer}>YIZER</Text>
       <View style={styles.content}>
         <Text style={styles.title}>Iniciar Sesión</Text>
 
@@ -115,6 +116,15 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+
+  yizer: {
+    fontSize: 45,
+    fontStyle: 'italic',
+    fontWeight: 'bold',
+    marginBottom: 30,
+    color: '#1e90ff',
+  },
+
   container: {
     flex: 1,
     backgroundColor: '#f0f2f5',

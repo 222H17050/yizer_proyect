@@ -62,7 +62,7 @@ const DropdownMenu = () => {
                             setMenuVisible(false);
                             router.push('/products');
                         }}>
-                            <Text style={styles.itemText}>Productos</Text>
+                            <Text style={styles.itemText}>Tienda</Text>
                         </TouchableOpacity>
                     )}
 
