@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useLayoutEffect, useRef } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TextInput, Button, Alert, Platform } from 'react-native';
-// Asegúrate de que las interfaces y la función de la API se importen correctamente
 import { getFromCatalog, createCartItem, ApiResponse } from '../api/client';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { Formik } from 'formik';
@@ -24,7 +23,7 @@ interface Producto {
   precio_base: number;
   descripcion: string;
   variantes: Variante[];
-  tipo: string; // Asegúrate de que esta propiedad esté presente en los datos que devuelve tu API
+  tipo: string;
   imagen_url: string;
 }
 
@@ -35,7 +34,7 @@ interface PurchaseFormValues {
   posicion: string;
   tamano: string;
   notas: string;
-  precio_extra: string; // Sigue siendo string porque Formik maneja los inputs como strings
+  precio_extra: string;
 }
 
 // Esquema de validación para el formulario de compra usando Yup
@@ -85,7 +84,7 @@ export default function ProductDetailScreen() {
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const [imagenPersonalizadaUri, setImagenPersonalizadaUri] = useState<string | null>(null);
-  const [imagenPersonalizadaFile, setImagenPersonalizadaFile] = useState<File | null>(null); // Nuevo estado para guardar el archivo
+  const [imagenPersonalizadaFile, setImagenPersonalizadaFile] = useState<File | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   useLayoutEffect(() => {
@@ -109,7 +108,6 @@ export default function ProductDetailScreen() {
         setProducto(productData);
       } catch (err: any) {
         console.error('Error al obtener el producto:', err);
-        // MENSAJE DE ERROR MÁS DESCRIPTIVO
         setError(`Error al cargar el producto con ID ${id}. Por favor, inténtalo de nuevo más tarde.`);
       } finally {
         setLoading(false);
@@ -125,10 +123,8 @@ export default function ProductDetailScreen() {
         imageInputRef.current.click();
       }
     } else {
-      // Lógica para nativo (simulada)
       const mockImageUri = 'https://placehold.co/400x300/e0e0e0/888?text=Imagen+Cargada';
       setImagenPersonalizadaUri(mockImageUri);
-      // En un entorno nativo real, aquí obtendrías el archivo y lo guardarías en el estado
     }
   };
 
@@ -136,7 +132,7 @@ export default function ProductDetailScreen() {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       setImagenPersonalizadaUri(URL.createObjectURL(file));
-      setImagenPersonalizadaFile(file); // Guardamos el archivo en el nuevo estado
+      setImagenPersonalizadaFile(file);
     }
   };
 
@@ -161,17 +157,19 @@ export default function ProductDetailScreen() {
         direccion: values.direccion,
       };
 
+      // CORRECCIÓN: Se envían los datos de personalización en el campo 'detalles_pedido'
+      // para que coincida con lo que espera el backend.
       if (producto.tipo === 'perzonalizable') {
-        cartData.pedido = {
-          posicion: values.posicion || '', // Se usa '' en lugar de null
-          tamaño: values.tamano || '', // Se usa '' en lugar de null
-          notas: values.notas || '', // Se usa '' en lugar de null
-          precio_extra: parseFloat(values.precio_extra || '1'),
+        cartData.detalles_pedido = {
+          posicion: values.posicion || '',
+          tamano: values.tamano || '',
+          notas: values.notas || '',
+          precio_extra: parseFloat(values.precio_extra || '0'),
         };
         
-        // CORRECCIÓN: Usar 'imagen_personalizada' para que coincida con la interfaz del cliente.ts
+        // Se envía la imagen personalizada si existe
         if (imagenPersonalizadaFile) {
-          cartData.imagen_personalizada = imagenPersonalizadaFile;
+          cartData.imagen_url_personalizada = imagenPersonalizadaFile;
         }
       }
 
@@ -180,8 +178,8 @@ export default function ProductDetailScreen() {
       if (result && result.success) {
         Alert.alert('Éxito', result.message || 'Producto añadido al carrito correctamente.');
         actions.resetForm();
-        setImagenPersonalizadaUri(null); // Resetea la URI
-        setImagenPersonalizadaFile(null); // Resetea el archivo
+        setImagenPersonalizadaUri(null);
+        setImagenPersonalizadaFile(null);
       } else {
         Alert.alert('Error', result.message || 'Ocurrió un error al añadir el producto al carrito.');
       }
@@ -205,7 +203,7 @@ export default function ProductDetailScreen() {
     return (
       <View style={styles.loadingContainer}>
         <Text style={styles.errorText}>{error}</Text>
-        <Button title="Reintentar" onPress={() => { setLoading(true); setError(null); /* Puedes re-ejecutar fetchProduct aquí si es necesario */ }} />
+        <Button title="Reintentar" onPress={() => { setLoading(true); setError(null); }} />
       </View>
     );
   }

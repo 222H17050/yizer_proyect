@@ -1,4 +1,4 @@
-// controllers/cartController.js
+// controllers/cart.controllers.js
 import { pool } from '../db.js';
 import path from 'path';
 
@@ -19,7 +19,7 @@ export const createCart = async (req, res) => {
       id_producto,
       cantidad,
       direccion, // Campo requerido
-      detalles_pedido
+      detalles_pedido: detallesPedidoJSON // Renombramos para evitar conflicto
     } = req.body;
 
     // Validación estricta de campos obligatorios
@@ -29,21 +29,33 @@ export const createCart = async (req, res) => {
 
     // Determina la URL de la imagen si se subió un archivo
     const imagen_url_personalizada = req.file ? `/images/clients/${req.file.filename}` : null;
+    
+    // CORRECCIÓN CLAVE: Parsear el JSON de detalles_pedido
+    let detalles_pedido = {};
+    if (detallesPedidoJSON) {
+      try {
+        detalles_pedido = JSON.parse(detallesPedidoJSON);
+        console.log('Detalles de pedido recibidos:', detalles_pedido); // Log para depuración
+      } catch (e) {
+        throw new Error("El formato de detalles_pedido es inválido.");
+      }
+    }
 
     // Paso 1: Manejar los detalles de personalización del pedido.
-    // Solo se insertará una fila si hay `detalles_pedido` o una imagen.
     let id_detalles_pedido = null;
-    if (detalles_pedido || imagen_url_personalizada) {
-      const {
-        posicion = null,
-        tamaño = null,
-        notas = null,
-        precio_extra = 0
-      } = detalles_pedido || {};
+    if (Object.keys(detalles_pedido).length > 0 || imagen_url_personalizada) {
+      // CORRECCIÓN: Se obtienen los valores del objeto `detalles_pedido`
+      // de forma más robusta. Si el campo no existe o es null, se usará
+      // un string vacío. Esto asegura que se usen los datos enviados
+      // por el formulario y se eviten los errores de `NOT NULL`.
+      const posicion = detalles_pedido.posicion ?? '';
+      const tamano = detalles_pedido.tamano ?? '';
+      const notas = detalles_pedido.notas ?? '';
+      const precio_extra = detalles_pedido.precio_extra ?? 0;
       
       const [detallesResult] = await connection.query(
         "INSERT INTO detalles_pedido (posicion, tamaño, notas, precio_extra, imagen_url_personalizada) VALUES (?, ?, ?, ?, ?)",
-        [posicion, tamaño, notas, precio_extra, imagen_url_personalizada]
+        [posicion, tamano, notas, precio_extra, imagen_url_personalizada]
       );
       id_detalles_pedido = detallesResult.insertId;
     }
@@ -59,8 +71,6 @@ export const createCart = async (req, res) => {
       throw new Error(`El producto con ID ${id_producto} no fue encontrado.`);
     }
 
-    // CORRECCIÓN: Se asegura que el precio_base de la base de datos sea un número.
-    // Aunque la columna es DECIMAL, si el valor es NULL, se usará 0.
     const precio_unitario = Number(products[0].precio_base) || 0;
 
     // Paso 3: Crear el pedido en la tabla `pedido`.
@@ -76,8 +86,6 @@ export const createCart = async (req, res) => {
     const costo_total = precio_final * cantidad;
 
     // Paso 5: Crear el registro del carrito en la tabla `carrito`.
-    // Se usa toFixed(2) para formatear a string con dos decimales,
-    // ya que la columna `costo_total` en la tabla `carrito` es de tipo VARCHAR.
     const [cartResult] = await connection.query(
       "INSERT INTO carrito (id_cliente, id_pedido, cantidad, costo_total) VALUES (?, ?, ?, ?)",
       [id_cliente, id_pedido, cantidad, costo_total.toFixed(2)]
@@ -93,7 +101,6 @@ export const createCart = async (req, res) => {
       data: {
         id_carrito: cartResult.insertId,
         id_pedido: id_pedido,
-        // Se devuelve el costo total como un número para que el cliente lo pueda usar
         costo_total: Number(costo_total.toFixed(2))
       }
     });
@@ -108,10 +115,11 @@ export const createCart = async (req, res) => {
       error: error.message
     });
   } finally {
-    // Siempre se libera la conexión a la base de datos, sin importar si hubo un error o no.
+    // Siempre se libera la conexión a la base de datos.
     connection.release();
   }
 };
+
 
 
 
