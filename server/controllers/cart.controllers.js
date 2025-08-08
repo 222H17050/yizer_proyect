@@ -1,86 +1,118 @@
 // controllers/cartController.js
 import { pool } from '../db.js';
+import path from 'path';
 
+/**
+ * Endpoint para añadir un producto al carrito de compras.
+ * Realiza una serie de inserciones en la base de datos dentro de una transacción
+ * para asegurar la integridad de los datos.
+ */
 export const createCart = async (req, res) => {
   const connection = await pool.getConnection();
+
   try {
+    // Inicia una transacción para asegurar que todas las operaciones se completen o se reviertan.
     await connection.beginTransaction();
 
     const {
       id_cliente,
       id_producto,
       cantidad,
-      direccion, // Agregar la dirección al destructurar el body
+      direccion, // Campo requerido
       detalles_pedido
     } = req.body;
 
-    // 1. Manejar detalles_pedido condicionalmente
+    // Validación estricta de campos obligatorios
+    if (!id_cliente || !id_producto || !cantidad || !direccion) {
+      throw new Error("Faltan campos obligatorios: id_cliente, id_producto, cantidad o direccion.");
+    }
+
+    // Determina la URL de la imagen si se subió un archivo
+    const imagen_url_personalizada = req.file ? `/images/clients/${req.file.filename}` : null;
+
+    // Paso 1: Manejar los detalles de personalización del pedido.
+    // Solo se insertará una fila si hay `detalles_pedido` o una imagen.
     let id_detalles_pedido = null;
-    if (detalles_pedido) {
+    if (detalles_pedido || imagen_url_personalizada) {
       const {
-        posicion,
-        tamaño,
-        notas,
-        precio_extra
-      } = detalles_pedido;
+        posicion = null,
+        tamaño = null,
+        notas = null,
+        precio_extra = 0
+      } = detalles_pedido || {};
+      
       const [detallesResult] = await connection.query(
-        "INSERT INTO detalles_pedido (posicion, tamaño, notas, precio_extra) VALUES (?, ?, ?, ?)",
-        [posicion, tamaño, notas, precio_extra]
+        "INSERT INTO detalles_pedido (posicion, tamaño, notas, precio_extra, imagen_url_personalizada) VALUES (?, ?, ?, ?, ?)",
+        [posicion, tamaño, notas, precio_extra, imagen_url_personalizada]
       );
       id_detalles_pedido = detallesResult.insertId;
     }
 
-    // 2. Obtener precio_base del producto
-    const [productPriceResult] = await connection.query(
+    // Paso 2: Obtener el precio base del producto desde la base de datos.
+    const [products] = await connection.query(
       "SELECT precio_base FROM producto WHERE id_producto = ?",
       [id_producto]
     );
 
-    if (productPriceResult.length === 0) {
-      throw new Error("Producto no encontrado");
+    // Si el producto no existe, se lanza un error.
+    if (products.length === 0) {
+      throw new Error(`El producto con ID ${id_producto} no fue encontrado.`);
     }
 
-    const precio_unitario = productPriceResult[0].precio_base;
+    // CORRECCIÓN: Se asegura que el precio_base de la base de datos sea un número.
+    // Aunque la columna es DECIMAL, si el valor es NULL, se usará 0.
+    const precio_unitario = Number(products[0].precio_base) || 0;
 
-    // 3. Crear el pedido
-    const estado = 'pendiente'; // Estado inicial del pedido
+    // Paso 3: Crear el pedido en la tabla `pedido`.
     const [pedidoResult] = await connection.query(
-      "INSERT INTO pedido (precio_unitario, estado, direccion, id_detalles_pedido, id_producto) VALUES (?, ?, ?, ?, ?)",
-      [precio_unitario, estado, direccion, id_detalles_pedido, id_producto]
+      "INSERT INTO pedido (id_producto, id_detalles_pedido, precio_unitario, estado, direccion) VALUES (?, ?, ?, ?, ?)",
+      [id_producto, id_detalles_pedido, precio_unitario, 'pendiente', direccion]
     );
-
     const id_pedido = pedidoResult.insertId;
 
-    // 4. Crear el carrito y calcular el costo total
-    const costo_total = (parseFloat(precio_unitario) + (detalles_pedido?.precio_extra || 0)) * parseInt(cantidad);
-    await connection.query(
-      "INSERT INTO carrito (cantidad, costo_total, id_pedido, id_cliente) VALUES (?, ?, ?, ?)",
-      [cantidad, costo_total, id_pedido, id_cliente]
+    // Paso 4: Calcular el costo total, asegurando que los precios son válidos.
+    const precio_extra_validado = (detalles_pedido?.precio_extra && !isNaN(detalles_pedido.precio_extra)) ? detalles_pedido.precio_extra : 0;
+    const precio_final = precio_unitario + precio_extra_validado;
+    const costo_total = precio_final * cantidad;
+
+    // Paso 5: Crear el registro del carrito en la tabla `carrito`.
+    // Se usa toFixed(2) para formatear a string con dos decimales,
+    // ya que la columna `costo_total` en la tabla `carrito` es de tipo VARCHAR.
+    const [cartResult] = await connection.query(
+      "INSERT INTO carrito (id_cliente, id_pedido, cantidad, costo_total) VALUES (?, ?, ?, ?)",
+      [id_cliente, id_pedido, cantidad, costo_total.toFixed(2)]
     );
 
+    // Si todo fue bien, se confirman los cambios en la base de datos.
     await connection.commit();
 
+    // Envía una respuesta exitosa al cliente.
     res.status(201).json({
       success: true,
-      message: 'Carrito creado con éxito',
-      id_pedido,
-      costo_total,
-      id_producto,
-      cantidad
+      message: 'Producto añadido al carrito correctamente.',
+      data: {
+        id_carrito: cartResult.insertId,
+        id_pedido: id_pedido,
+        // Se devuelve el costo total como un número para que el cliente lo pueda usar
+        costo_total: Number(costo_total.toFixed(2))
+      }
     });
 
   } catch (error) {
+    // Si algo falló, se revierten todos los cambios de la transacción.
     await connection.rollback();
     console.error('Error en createCart:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear el carrito',
+      message: 'Error al crear el carrito.',
       error: error.message
     });
   } finally {
+    // Siempre se libera la conexión a la base de datos, sin importar si hubo un error o no.
     connection.release();
   }
 };
+
 
 
 export const getCart = async (req, res) => {
@@ -117,9 +149,9 @@ export const getCart = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      cart
+      message: 'Carrito encontrado',
+      cart: cart,
     });
-
   } catch (error) {
     console.error('Error en getCart:', error);
     res.status(500).json({

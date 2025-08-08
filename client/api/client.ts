@@ -28,7 +28,7 @@ export interface ClientData {
   id_cliente: string; // O number, según tu DB
   nombre: string;
   correo: string;
-  telefono: string;// Ahora es string, como lo modificamos en la DB
+  telefono: string; // Ahora es string, como lo modificamos en la DB
   // Agrega otras propiedades si tu servidor las devuelve al autenticar o crear
 }
 
@@ -39,18 +39,18 @@ interface ClientCreateData extends ClientAuthData {
   telefono: string;
 }
 
-// Interface for the data to send when creating a cart item
+// Interfaz actualizada para los datos del carrito, ahora con imagen_personalizada
 interface CartCreateData {
   id_cliente: string;
   id_producto: string;
   cantidad: number;
   direccion: string;
-  detalles_pedido?: {
-    posicion: string;
-    tamaño: string;
-    notas: string;
-    precio_extra: number;
-  };
+  detalles_pedido?: { };
+  posicion: string;
+  tamaño: string;
+  notas: string;
+  precio_extra: number;
+  imagen_url_personalizada?: File; // Nuevo campo para el archivo de imagen
 }
 
 // Interface for the data returned by the API after creating a cart item
@@ -59,6 +59,7 @@ interface CartCreateResponse {
   costo_total: number;
   id_producto: string;
   cantidad: number;
+  imagen_url?: string; // Nuevo campo en la respuesta
 }
 
 // Interface for a single item in the cart returned by the API
@@ -69,10 +70,10 @@ export interface CartItem {
   imagen_url: string;
   precio_unitario: number;
   estado: string;
-  detalles_posicion?: string;
-  detalles_tamano?: string;
-  detalles_notas?: string;
-  detalles_precio_extra?: number;
+  posicion?: string;
+  tamano?: string;
+  notas?: string;
+  precio_extra?: number;
 }
 
 // Interfaz genérica para la respuesta de la API (success, message, data)
@@ -82,8 +83,6 @@ export interface ApiResponse<T> {
   data?: T; // data es opcional y puede ser de cualquier tipo T
   error?: string; // Para capturar mensajes de error más detallados del backend
 }
-
-
 
 const API_BASE_URL = 'http://localhost:4000'; // Cambia por tu IP o dominio
 
@@ -164,9 +163,30 @@ export const createClient = async (clientData: ClientCreateData): Promise<ApiRes
 // --- Funciones para interactuar con la API de Carrito ---
 
 // Función para crear un nuevo ítem en el carrito
+// La hemos modificado para que pueda manejar el FormData con la imagen
 export const createCartItem = async (cartData: CartCreateData): Promise<ApiResponse<CartCreateResponse>> => {
   try {
-    const response = await apiClient.post('/cart', cartData);
+    const formData = new FormData();
+
+    // Agregar los campos del formulario
+    formData.append('id_cliente', cartData.id_cliente);
+    formData.append('id_producto', cartData.id_producto);
+    formData.append('cantidad', cartData.cantidad.toString());
+    formData.append('direccion', cartData.direccion);
+
+    if (cartData.detalles_pedido) {
+      formData.append('detalles_pedido', JSON.stringify(cartData.detalles_pedido));
+    }
+
+    if (cartData.imagen_url_personalizada) {
+      formData.append('clientImage', cartData.imagen_url_personalizada); // Asegúrate que 'clientImage' coincida con el nombre del campo en Multer
+    }
+
+    const response = await apiClient.post('/cart', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error: any) {
     console.error('Error creating cart item:', error);

@@ -87,11 +87,16 @@ const styles = StyleSheet.create({
     },
     menuButton: {
         padding: 8,
-        backgroundColor: '#007bff',
+        backgroundColor: 'white', // Rojo oscuro para el botón
         borderRadius: 5,
+        shadowColor: '#a00',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
     },
     menuButtonText: {
-        color: '#fff',
+        color: '#c0392b',
         fontWeight: 'bold',
     },
     dropdown: {
@@ -101,7 +106,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 5,
         elevation: 3,
-        shadowColor: '#000',
+        shadowColor: '#a00', // Sombra roja
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 3,
@@ -110,12 +115,12 @@ const styles = StyleSheet.create({
     },
     dropdownItem: {
         padding: 15,
-        borderBottomColor: '#eee',
+        borderBottomColor: '#ffdbd9', // Un tono de rojo muy claro para el separador
         borderBottomWidth: 1,
     },
     itemText: {
         fontSize: 16,
-        color: '#333',
+        color: 'black', // Texto en un tono de rojo oscuro
     },
 });
 

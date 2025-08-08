@@ -1,6 +1,5 @@
 // routes/productRoutes.js
 import { Router } from 'express';
-import upload from '../multer.config.js'; 
 import {
   getCatalogStandard,
   getCatalogCustomizable,

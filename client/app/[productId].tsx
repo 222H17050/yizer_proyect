@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useLayoutEffect } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TextInput, Button, Alert } from 'react-native';
+import React, { useEffect, useState, useLayoutEffect, useRef } from 'react';
+import { View, Text, Image, StyleSheet, ScrollView, TextInput, Button, Alert, Platform } from 'react-native';
+// Asegúrate de que las interfaces y la función de la API se importen correctamente
 import { getFromCatalog, createCartItem, ApiResponse } from '../api/client';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { Formik } from 'formik';
@@ -31,10 +32,10 @@ interface Producto {
 interface PurchaseFormValues {
   cantidad: string;
   direccion: string;
-  detalles_posicion?: string;
-  detalles_tamano?: string;
-  detalles_notas?: string;
-  detalles_precio_extra?: string; // Sigue siendo string porque Formik maneja los inputs como strings
+  posicion: string;
+  tamano: string;
+  notas: string;
+  precio_extra: string; // Sigue siendo string porque Formik maneja los inputs como strings
 }
 
 // Esquema de validación para el formulario de compra usando Yup
@@ -46,10 +47,7 @@ const PurchaseSchema = Yup.object().shape({
   direccion: Yup.string()
     .required('La dirección es obligatoria')
     .min(5, 'La dirección debe tener al menos 5 caracteres'),
-  // Ya no necesitamos una validación compleja para detalles_precio_extra si es calculado
-  // Podríamos eliminarlo del esquema si no queremos que Yup lo valide,
-  // pero mantenerlo como number con transform es seguro si el valor es siempre numérico.
-  detalles_precio_extra: Yup.number()
+  precio_extra: Yup.number()
     .nullable()
     .min(0, 'El precio extra no puede ser negativo')
     .typeError('El precio extra debe ser un número válido'),
@@ -86,6 +84,9 @@ export default function ProductDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const [imagenPersonalizadaUri, setImagenPersonalizadaUri] = useState<string | null>(null);
+  const [imagenPersonalizadaFile, setImagenPersonalizadaFile] = useState<File | null>(null); // Nuevo estado para guardar el archivo
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useLayoutEffect(() => {
     if (producto) {
@@ -108,7 +109,8 @@ export default function ProductDetailScreen() {
         setProducto(productData);
       } catch (err: any) {
         console.error('Error al obtener el producto:', err);
-        setError('Error al cargar el producto. Por favor, inténtalo de nuevo más tarde.');
+        // MENSAJE DE ERROR MÁS DESCRIPTIVO
+        setError(`Error al cargar el producto con ID ${id}. Por favor, inténtalo de nuevo más tarde.`);
       } finally {
         setLoading(false);
       }
@@ -116,6 +118,27 @@ export default function ProductDetailScreen() {
 
     fetchProduct();
   }, [productId]);
+
+  const handleImagePick = async () => {
+    if (Platform.OS === 'web') {
+      if (imageInputRef.current) {
+        imageInputRef.current.click();
+      }
+    } else {
+      // Lógica para nativo (simulada)
+      const mockImageUri = 'https://placehold.co/400x300/e0e0e0/888?text=Imagen+Cargada';
+      setImagenPersonalizadaUri(mockImageUri);
+      // En un entorno nativo real, aquí obtendrías el archivo y lo guardarías en el estado
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      setImagenPersonalizadaUri(URL.createObjectURL(file));
+      setImagenPersonalizadaFile(file); // Guardamos el archivo en el nuevo estado
+    }
+  };
 
   const handleAddToCart = async (values: PurchaseFormValues, actions: any) => {
     if (!user || !user.id_cliente) {
@@ -139,13 +162,17 @@ export default function ProductDetailScreen() {
       };
 
       if (producto.tipo === 'perzonalizable') {
-        cartData.detalles_pedido = {
-          posicion: values.detalles_posicion || '',
-          tamaño: values.detalles_tamano || '',
-          notas: values.detalles_notas || '',
-          // Aseguramos que el precio_extra sea un número flotante, usando el valor calculado
-          precio_extra: parseFloat(values.detalles_precio_extra || '0'),
+        cartData.pedido = {
+          posicion: values.posicion || '', // Se usa '' en lugar de null
+          tamaño: values.tamano || '', // Se usa '' en lugar de null
+          notas: values.notas || '', // Se usa '' en lugar de null
+          precio_extra: parseFloat(values.precio_extra || '1'),
         };
+        
+        // CORRECCIÓN: Usar 'imagen_personalizada' para que coincida con la interfaz del cliente.ts
+        if (imagenPersonalizadaFile) {
+          cartData.imagen_personalizada = imagenPersonalizadaFile;
+        }
       }
 
       const result: ApiResponse<any> = await createCartItem(cartData);
@@ -153,6 +180,8 @@ export default function ProductDetailScreen() {
       if (result && result.success) {
         Alert.alert('Éxito', result.message || 'Producto añadido al carrito correctamente.');
         actions.resetForm();
+        setImagenPersonalizadaUri(null); // Resetea la URI
+        setImagenPersonalizadaFile(null); // Resetea el archivo
       } else {
         Alert.alert('Error', result.message || 'Ocurrió un error al añadir el producto al carrito.');
       }
@@ -208,32 +237,29 @@ export default function ProductDetailScreen() {
         initialValues={{
           cantidad: '1',
           direccion: '',
-          detalles_posicion: '',
-          detalles_tamano: '',
-          detalles_notas: '',
-          detalles_precio_extra: '150', // Valor inicial por defecto de 150
+          posicion: '',
+          tamano: '',
+          notas: '',
+          precio_extra: '150',
         }}
         validationSchema={PurchaseSchema}
         onSubmit={handleAddToCart}
       >
         {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting, setFieldValue }) => {
-          // Lógica para calcular el precio extra basada en la cantidad
           useEffect(() => {
             const currentCantidad = parseInt(values.cantidad);
-            let newPrecioExtra = 150; // Valor por defecto
+            let newPrecioExtra = 150;
 
             if (!isNaN(currentCantidad) && currentCantidad > 5) {
-              newPrecioExtra = 100; // Si la cantidad es mayor a 5
+              newPrecioExtra = 100;
             }
 
-            // Convertimos el valor actual del estado de Formik a número para comparar
-            const currentPrecioExtraInState = parseFloat(values.detalles_precio_extra || '0');
+            const currentPrecioExtraInState = parseFloat(values.precio_extra || '0');
 
-            // Solo actualizamos si el valor calculado es diferente al que ya está en Formik
             if (currentPrecioExtraInState !== newPrecioExtra) {
-              setFieldValue('detalles_precio_extra', String(newPrecioExtra), false); // false para no re-validar/tocar en cada cambio
+              setFieldValue('precio_extra', String(newPrecioExtra), false);
             }
-          }, [values.cantidad, setFieldValue, values.detalles_precio_extra]); // Dependencias: cantidad y setFieldValue
+          }, [values.cantidad, setFieldValue, values.precio_extra]);
 
           return (
             <View style={styles.formContainer}>
@@ -259,14 +285,31 @@ export default function ProductDetailScreen() {
               />
               {errors.direccion && touched.direccion && <Text style={styles.errorText}>{errors.direccion}</Text>}
 
-              {/* INICIO DE LA SECCIÓN CONDICIONAL */}
               {producto.tipo === 'perzonalizable' && (
                 <View>
+                  <Text style={styles.label}>Cargar Imagen:</Text>
+                  {Platform.OS === 'web' && (
+                    <input
+                      type="file"
+                      ref={imageInputRef}
+                      style={{ display: 'none' }}
+                      onChange={handleFileChange}
+                    />
+                  )}
+                  <Button
+                    title="Seleccionar Imagen"
+                    onPress={handleImagePick}
+                    color="#007bff"
+                  />
+                  {imagenPersonalizadaUri && (
+                    <Image source={{ uri: imagenPersonalizadaUri }} style={styles.uploadedImage} />
+                  )}
+
                   <Text style={styles.label}>Posición:</Text>
                   <View style={styles.pickerContainer}>
                     <Picker
-                      selectedValue={values.detalles_posicion}
-                      onValueChange={(itemValue) => setFieldValue('detalles_posicion', itemValue)}
+                      selectedValue={values.posicion}
+                      onValueChange={(itemValue) => setFieldValue('posicion', itemValue)}
                       style={styles.picker}
                     >
                       {posicionOptions.map((option) => (
@@ -278,8 +321,8 @@ export default function ProductDetailScreen() {
                   <Text style={styles.label}>Tamaño:</Text>
                   <View style={styles.pickerContainer}>
                     <Picker
-                      selectedValue={values.detalles_tamano}
-                      onValueChange={(itemValue) => setFieldValue('detalles_tamano', itemValue)}
+                      selectedValue={values.tamano}
+                      onValueChange={(itemValue) => setFieldValue('tamano', itemValue)}
                       style={styles.picker}
                     >
                       {tamanoOptions.map((option) => (
@@ -291,25 +334,23 @@ export default function ProductDetailScreen() {
                   <Text style={styles.label}>Notas:</Text>
                   <TextInput
                     style={styles.input}
-                    onChangeText={handleChange('detalles_notas')}
-                    onBlur={handleBlur('detalles_notas')}
-                    value={values.detalles_notas}
+                    onChangeText={handleChange('notas')}
+                    onBlur={handleBlur('notas')}
+                    value={values.notas}
                   />
 
-                  {/* Mostramos el Precio Extra Calculado, no un input */}
                   <Text style={styles.label}>Precio Extra Calculado:</Text>
                   <Text style={styles.calculatedPriceText}>
-                    ${parseFloat(values.detalles_precio_extra || '0').toFixed(2)}
+                    ${parseFloat(values.precio_extra || '0').toFixed(2)}
                   </Text>
-                  {/* Ya no necesitamos mostrar errores de validación para un campo calculado */}
                 </View>
               )}
-              {/* FIN DE LA SECCIÓN CONDICIONAL */}
 
               <Button
                 onPress={() => handleSubmit()}
                 title={isSubmitting ? "Añadiendo..." : "Añadir al Carrito"}
                 disabled={isSubmitting}
+                color="#9d2a2aff"
               />
             </View>
           );
@@ -321,19 +362,14 @@ export default function ProductDetailScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: '#fff',
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    padding: 16,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  image: {
-    width: '100%',
-    height: 300,
-    resizeMode: 'contain',
-    marginBottom: 20,
   },
   noImageContainer: {
     width: '100%',
@@ -352,6 +388,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 5,
+    color: '#333',
   },
   descripcion: {
     fontSize: 16,
@@ -373,47 +410,74 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
+    backgroundColor: '#fff',
   },
   formTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
     textAlign: 'center',
+    color: '#333',
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
     marginTop: 10,
+    color: '#555',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
     borderRadius: 5,
+    backgroundColor: '#f9f9f9',
     marginTop: 5,
     marginBottom: 5,
   },
   errorText: {
     fontSize: 12,
     color: 'red',
+    marginBottom: 5,
   },
   pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
     marginTop: 5,
-    marginBottom: 5,
+    marginBottom: 15,
     overflow: 'hidden',
   },
   picker: {
-    height: 50,
-    width: '100%',
+    borderRadius: 20,
+    margin: 10,
+    padding: 10,
+    color: 'white',
+    backgroundColor: '#ff6b6b',
+    borderWidth: 0,
+    shadowColor: '#a00',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
-  calculatedPriceText: { // Nuevo estilo para el texto del precio calculado
-    fontSize: 16,
+  calculatedPriceText: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
-    marginTop: 5,
-    marginBottom: 10,
+    color: '#006400',
+    textAlign: 'center',
+    marginVertical: 20,
+    padding: 10,
+    backgroundColor: '#e8f5e9',
+    borderRadius: 8,
+  },
+  image: {
+    width: 300,
+    height: 300,
+    margin: '5%',
+    borderRadius: 15,
+  },
+  uploadedImage: {
+    width: 150,
+    height: 150,
+    resizeMode: 'contain',
+    marginTop: 10,
+    marginBottom: 15,
+    alignSelf: 'center',
   },
 });

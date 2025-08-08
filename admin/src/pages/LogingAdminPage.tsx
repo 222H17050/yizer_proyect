@@ -44,13 +44,13 @@ const LoginAdminPage = () => {
     });
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-                <h1 className="text-2xl font-bold text-center mb-6">Acceso Administrativo</h1>
+        <div className="login-container">
+            <div className="card form-container">
+                <h1 className="login-title">Acceso Administrativo</h1>
 
-                <form onSubmit={formik.handleSubmit} className="space-y-4">
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <form onSubmit={formik.handleSubmit} className="product-form">
+                    <div className="form-field">
+                        <label htmlFor="email" className="form-label">
                             Correo electrónico
                         </label>
                         <input
@@ -60,18 +60,15 @@ const LoginAdminPage = () => {
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             value={formik.values.email}
-                            className={`w-full px-4 py-2 rounded-md border ${formik.touched.email && formik.errors.email
-                                ? 'border-red-500 focus:ring-red-500'
-                                : 'border-gray-300 focus:ring-blue-500'
-                                } focus:outline-none focus:ring-1`}
+                            className={`form-input ${formik.touched.email && formik.errors.email ? 'border-red-500' : ''}`}
                         />
                         {formik.touched.email && formik.errors.email && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
+                            <p className="form-error">{formik.errors.email}</p>
                         )}
                     </div>
 
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <div className="form-field">
+                        <label htmlFor="password" className="form-label">
                             Contraseña
                         </label>
                         <input
@@ -81,25 +78,17 @@ const LoginAdminPage = () => {
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
                             value={formik.values.password}
-                            className={`w-full px-4 py-2 rounded-md border ${formik.touched.password && formik.errors.password
-                                ? 'border-red-500 focus:ring-red-500'
-                                : 'border-gray-300 focus:ring-blue-500'
-                                } focus:outline-none focus:ring-1`}
+                            className={`form-input ${formik.touched.password && formik.errors.password ? 'border-red-500' : ''}`}
                         />
                         {formik.touched.password && formik.errors.password && (
-                            <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
+                            <p className="form-error">{formik.errors.password}</p>
                         )}
                     </div>
-
-                   
 
                     <button
                         type="submit"
                         disabled={formik.isSubmitting}
-                        className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${formik.isSubmitting
-                            ? 'bg-blue-400 cursor-not-allowed'
-                            : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
-                            }`}
+                        className={`submit-btn ${formik.isSubmitting ? 'submit-btn-disabled' : ''}`}
                     >
                         {formik.isSubmitting ? 'Verificando...' : 'Iniciar sesión'}
                     </button>

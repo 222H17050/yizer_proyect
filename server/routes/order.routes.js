@@ -1,13 +1,10 @@
 import { Router } from "express";
 import {
-  getOrder,
-  deleteOrder,
+  getOrder
 } from "../controllers/order.controllers.js";
 
 const router = Router();
 
 router.get("/order", getOrder);
-
-router.put("/order/:id", deleteOrder);
 
 export default router;

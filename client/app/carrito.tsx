@@ -138,7 +138,7 @@ const CarritoScreen = () => {
         {item.detalles_precio_extra && <Text style={styles.itemDetail}>Extra: ${parseFloat(item.detalles_precio_extra).toFixed(2)}</Text>}
         <Text style={styles.itemDetail}>Estado: {item.estado}</Text>
         <View style={styles.payButtonContainer}>
-          <Button title="Pagar" onPress={() => handlePayPress(item)} color="#2a9d8f" />
+          <Button title="Pagar" onPress={() => handlePayPress(item)} color="#9d2a2aff" />
         </View>
       </View>
     );
@@ -162,19 +162,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff0f0',
   },
   centeredContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff5f5', // Tono de rojo mejorado
+    padding: 20,
+  },
+  loaderText: {
+    marginTop: 10,
+    fontSize: 18,
+    color: '#a00',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     marginBottom: 20,
-    color: '#333',
+    color: '#a00', // Rojo oscuro
     textAlign: 'center',
   },
   listContent: {
@@ -187,65 +193,78 @@ const styles = StyleSheet.create({
   cartItemContainer: {
     backgroundColor: '#fff',
     padding: 10,
-    borderRadius: 10,
-    width: ITEM_WIDTH,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    borderRadius: 15,
+    width: '46%',
+    margin: '2%',
+    shadowColor: '#a00', // Sombra roja
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 8,
     alignItems: 'center',
   },
-  productImage: {
+  productImageContainer: {
     width: '100%',
-    height: 100,
-    resizeMode: 'contain',
+    height: 120,
+    borderRadius: 10,
+    overflow: 'hidden',
     marginBottom: 8,
-    borderRadius: 8,
+  },
+  productImage: {
+    width: 100,
+    height: 100,
+    resizeMode: 'cover',
   },
   noImagePlaceholder: {
     width: '100%',
-    height: 100,
-    backgroundColor: '#e0e0e0',
+    height: '100%',
+    backgroundColor: '#ffdbd9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
-    borderRadius: 8,
   },
   noImageText: {
-    color: '#888',
+    color: '#a00',
     fontSize: 12,
   },
   productName: {
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 4,
-    color: '#2a9d8f',
+    color: '#a00', // Rojo oscuro
     textAlign: 'center',
   },
   itemDetail: {
     fontSize: 12,
-    color: '#555',
+    color: '#777',
     marginBottom: 2,
     textAlign: 'center',
   },
   totalCost: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     marginTop: 5,
-    color: '#e76f51',
+    color: '#d00', // Rojo más vibrante
     textAlign: 'center',
   },
   errorText: {
     color: 'red',
-    fontSize: 16,
+    fontSize: 18,
     textAlign: 'center',
-    marginBottom: 10,
+  },
+  emptyCartText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#ff6b6b',
   },
   payButtonContainer: {
-    marginTop: 10,
-    width: '80%', // Ajusta el ancho del botón
-  }
+    marginTop: 20,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 
 export default CarritoScreen;

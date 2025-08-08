@@ -4,6 +4,7 @@ import axios from 'axios';
 import * as Yup from 'yup';
 import { useEffect, useState } from 'react';
 
+// Define la interfaz para una variante de producto
 type Variant = {
     id_variante?: number;
     talla: string;
@@ -11,6 +12,7 @@ type Variant = {
     stock: string;
 };
 
+// Define la interfaz para los valores del formulario
 type FormValues = {
     nombre: string;
     modelo: string;
@@ -28,6 +30,7 @@ function EditProductPage() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [currentImage, setCurrentImage] = useState<string | null>(null);
 
+    // Esquema de validación con Yup para el formulario de edición de productos
     const productSchema = Yup.object().shape({
         nombre: Yup.string().required('El nombre es requerido'),
         modelo: Yup.string().required('El modelo es requerido'),
@@ -46,6 +49,7 @@ function EditProductPage() {
         ).min(1, 'Debe haber al menos una variante')
     });
 
+    // Maneja la selección de archivos
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.files && event.target.files[0]) {
             const file = event.target.files[0];
@@ -61,6 +65,7 @@ function EditProductPage() {
         }
     };
 
+    // Configuración de Formik para el formulario
     const formik = useFormik<FormValues>({
         initialValues: {
             nombre: '',
@@ -76,7 +81,7 @@ function EditProductPage() {
             try {
                 const formData = new FormData();
 
-                // Agregar campos normales
+                // Añadir campos de texto al FormData
                 formData.append('nombre', values.nombre);
                 formData.append('modelo', values.modelo);
                 formData.append('tipo', values.tipo);
@@ -84,28 +89,22 @@ function EditProductPage() {
                 formData.append('precio_base', values.precio_base);
                 formData.append('disponible', values.disponible ? '1' : '0');
 
-                // Preparar variantes con el formato exacto que espera el backend
+                // Mapear y stringificar las variantes para el backend
                 const validatedVariantes = values.variantes.map(v => ({
-                    id_variante: v.id_variante || null, // Asegurar que sea null si no existe
+                    id_variante: v.id_variante || null,
                     talla: v.talla,
                     color: v.color,
                     stock: v.stock
                 }));
 
-                // IMPORTANTE: Usar exactamente 'variantes' como key
                 formData.append('variantes', JSON.stringify(validatedVariantes));
 
-                // Agregar archivo si existe
+                // Añadir la imagen si se ha seleccionado una nueva
                 if (selectedFile) {
                     formData.append('image', selectedFile);
                 }
 
-                // Depuración
-                console.log('Enviando variantes:', validatedVariantes);
-                for (const [key, value] of formData.entries()) {
-                    console.log(key, value);
-                }
-
+                // Llamada a la API para actualizar el producto
                 const response = await axios.put(
                     `http://localhost:4000/products/${id}`,
                     formData,
@@ -116,10 +115,13 @@ function EditProductPage() {
                     }
                 );
 
+                // Reemplazar alert() con un modal de confirmación
+                // TODO: Implementar un modal personalizado en lugar de alert()
                 alert('Producto actualizado correctamente');
                 navigate('/inventory');
             } catch (error) {
                 console.error('Error completo:', error);
+                // TODO: Implementar un modal de error personalizado
                 alert(`Error al actualizar el producto: ${error instanceof Error ? error.message : String(error)}`);
             } finally {
                 setSubmitting(false);
@@ -127,6 +129,7 @@ function EditProductPage() {
         }
     });
 
+    // Cargar los datos del producto existente al montar el componente
     useEffect(() => {
         const loadProduct = async () => {
             try {
@@ -152,6 +155,7 @@ function EditProductPage() {
                 });
             } catch (error) {
                 console.error('Error cargando producto:', error);
+                // TODO: Implementar un modal de error personalizado
                 alert('No se pudo cargar el producto para editar');
                 navigate('/inventory');
             }
@@ -160,6 +164,7 @@ function EditProductPage() {
         loadProduct();
     }, [id]);
 
+    // Función para agregar una nueva variante
     const addVariant = () => {
         formik.setFieldValue('variantes', [
             ...formik.values.variantes,
@@ -167,6 +172,7 @@ function EditProductPage() {
         ]);
     };
 
+    // Función para eliminar una variante
     const removeVariant = (index: number) => {
         const newVariants = [...formik.values.variantes];
         newVariants.splice(index, 1);
@@ -193,18 +199,13 @@ function EditProductPage() {
                             <img
                                 src={previewImage || currentImage || ''}
                                 alt="Vista previa"
-                                style={{
-                                    maxWidth: '200px',
-                                    maxHeight: '200px',
-                                    marginTop: '10px',
-                                    objectFit: 'cover'
-                                }}
+                                className="w-48 h-48 object-cover mt-2 rounded-md border border-gray-300"
                             />
                         </div>
                     )}
                 </div>
 
-                {/* Resto de campos del formulario (igual que antes) */}
+                {/* Resto de campos del formulario */}
                 <div className="form-field">
                     <label htmlFor="nombre" className="form-label">Nombre:</label>
                     <input
@@ -214,7 +215,7 @@ function EditProductPage() {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         value={formik.values.nombre}
-                        className="form-input"
+                        className={`form-input ${formik.touched.nombre && formik.errors.nombre ? 'form-input-error' : ''}`}
                     />
                     {formik.touched.nombre && formik.errors.nombre && (
                         <div className="form-error">{formik.errors.nombre}</div>
@@ -230,7 +231,7 @@ function EditProductPage() {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         value={formik.values.modelo}
-                        className="form-input"
+                        className={`form-input ${formik.touched.modelo && formik.errors.modelo ? 'form-input-error' : ''}`}
                     />
                     {formik.touched.modelo && formik.errors.modelo && (
                         <div className="form-error">{formik.errors.modelo}</div>
@@ -245,7 +246,7 @@ function EditProductPage() {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         value={formik.values.tipo}
-                        className="form-input"
+                        className={`form-input ${formik.touched.tipo && formik.errors.tipo ? 'form-input-error' : ''}`}
                     >
                         <option value="estandar">Estándar</option>
                         <option value="perzonalizable">Personalizable</option>
@@ -263,7 +264,7 @@ function EditProductPage() {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         value={formik.values.descripcion}
-                        className="form-input form-textarea"
+                        className={`form-input form-textarea ${formik.touched.descripcion && formik.errors.descripcion ? 'form-input-error' : ''}`}
                     />
                     {formik.touched.descripcion && formik.errors.descripcion && (
                         <div className="form-error">{formik.errors.descripcion}</div>
@@ -280,7 +281,7 @@ function EditProductPage() {
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                         value={formik.values.precio_base}
-                        className="form-input"
+                        className={`form-input ${formik.touched.precio_base && formik.errors.precio_base ? 'form-input-error' : ''}`}
                     />
                     {formik.touched.precio_base && formik.errors.precio_base && (
                         <div className="form-error">{formik.errors.precio_base}</div>
@@ -333,7 +334,7 @@ function EditProductPage() {
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     value={variant.talla}
-                                    className="variant-input"
+                                    className={`variant-input ${formik.touched.variantes?.[index]?.talla && formik.errors.variantes?.[index]?.talla ? 'variant-input-error' : ''}`}
                                 />
                                 {formik.touched.variantes?.[index]?.talla && formik.errors.variantes?.[index]?.talla && (
                                     <div className="variant-error">{formik.errors.variantes[index]?.talla}</div>
@@ -349,7 +350,7 @@ function EditProductPage() {
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     value={variant.color}
-                                    className="variant-input"
+                                    className={`variant-input ${formik.touched.variantes?.[index]?.color && formik.errors.variantes?.[index]?.color ? 'variant-input-error' : ''}`}
                                 />
                                 {formik.touched.variantes?.[index]?.color && formik.errors.variantes?.[index]?.color && (
                                     <div className="variant-error">{formik.errors.variantes[index]?.color}</div>
@@ -365,15 +366,12 @@ function EditProductPage() {
                                     onChange={formik.handleChange}
                                     onBlur={formik.handleBlur}
                                     value={variant.stock}
-                                    className="variant-input"
+                                    className={`variant-input ${formik.touched.variantes?.[index]?.stock && formik.errors.variantes?.[index]?.stock ? 'variant-input-error' : ''}`}
                                 />
                                 {formik.touched.variantes?.[index]?.stock && formik.errors.variantes?.[index]?.stock && (
                                     <div className="variant-error">{formik.errors.variantes[index]?.stock}</div>
                                 )}
                             </div>
-
-                            {/* Repetir para color y stock */}
-                            {/* ... */}
                         </div>
                     ))}
 
@@ -385,7 +383,6 @@ function EditProductPage() {
                         + Agregar otra variante
                     </button>
                 </div>
-
 
                 <div className="form-actions">
                     <button

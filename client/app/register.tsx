@@ -124,7 +124,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f0f2f5',
+        backgroundColor: '#fff0f0', // Fondo rojo muy claro
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
@@ -132,51 +132,55 @@ const styles = StyleSheet.create({
     content: {
         width: '100%',
         maxWidth: 400,
-        backgroundColor: '#fff',
-        borderRadius: 10,
+        backgroundColor: '#ffffff',
+        borderRadius: 20, // Bordes más redondeados
         padding: 30,
         alignItems: 'center',
-        shadowColor: '#000',
+        shadowColor: '#a00', // Sombra con un toque de rojo
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.1,
-        shadowRadius: 6,
-        elevation: 8,
+        shadowRadius: 8,
+        elevation: 5,
     },
     title: {
         fontSize: 28,
         fontWeight: 'bold',
         marginBottom: 30,
-        color: '#333',
+        color: '#a00', // Título en rojo oscuro
     },
     input: {
         width: '100%',
         height: 50,
-        borderColor: '#ddd',
+        borderColor: '#ff6b6b', // Borde en rojo
         borderWidth: 1,
-        borderRadius: 8,
+        borderRadius: 15, // Bordes redondeados para el input
         paddingHorizontal: 15,
         marginBottom: 20,
         fontSize: 16,
         color: '#333',
-        backgroundColor: '#f9f9f9',
+        backgroundColor: '#fff',
     },
     button: {
         width: '100%',
         height: 50,
-        backgroundColor: '#007bff',
+        backgroundColor: '#ff6b6b', // Botón en rojo
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 8,
-        marginBottom: 15,
+        borderRadius: 25, // Bordes muy redondeados
+        marginBottom: 20,
+        shadowColor: '#a00',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 3,
     },
     buttonText: {
         color: '#fff',
-        fontSize: 18,
         fontWeight: 'bold',
+        fontSize: 16,
     },
     loginText: {
-        color: '#007bff',
-        fontSize: 15,
-        marginTop: 10,
-    },
+      color: '#ff6b6b', // Link en rojo
+      marginTop: 10,
+    }
 });

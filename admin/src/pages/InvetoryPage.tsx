@@ -79,6 +79,7 @@ function InventoryPage() {
                             <th className="th">Estado</th>
                             <th className="th">Variantes</th>
                             <th className="th"></th>
+                            <th className="th"></th>
                         </tr>
                     </thead>
                     <tbody className="body">

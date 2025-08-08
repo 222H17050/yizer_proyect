@@ -1,8 +1,24 @@
+/* Importar la fuente 'Inter' de Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: #4a5568;
+}
+
 /* Contenedores */
 .inventory-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
+}
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f7fafc;
 }
 
 .card {
@@ -13,11 +29,11 @@
 }
 
 /* Tipografía */
-.title {
+.title, .login-title {
   font-size: 1.75rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
-  color: #1a202c;
+  color: #e53e3e; /* Color principal rojo */
   text-align: center;
 }
 
@@ -40,8 +56,10 @@
 }
 
 .header {
-  background-color: #2d3748;
+  background-color: #e53e3e; /* Fondo rojo */
   color: white;
+  /* Se agrega un border-radius para que coincida con la tarjeta padre */
+  border-radius: 0.5rem 0.5rem 0 0; 
 }
 
 .th {
@@ -59,11 +77,11 @@
 
 /* Filas y celdas */
 .product-row {
-  background-color: #f8fafc;
+  background-color: #fef2f2; /* Un rojo muy claro para las filas */
 }
 
 .variant-row {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #fed7d7; /* Borde rojo claro */
 }
 
 .td {
@@ -86,7 +104,7 @@
 }
 
 .sold-out {
-  background-color: #fff5f5;
+  background-color: #fef2f2;
   color: #e53e3e;
 }
 
@@ -104,19 +122,19 @@
 }
 
 .delete {
-  color: #e53e3e;
+  color: #c53030; /* Rojo más oscuro para el botón de eliminar */
 }
 
 .delete:hover {
-  color: #c53030;
+  color: #9b2c2c;
 }
 
 .edit {
-  color: #3182ce;
+  color: #4a5568; /* Un gris oscuro para el botón de editar */
 }
 
 .edit:hover {
-  color: #2c5282;
+  color: #1a202c;
 }
 
 /* Variantes */
@@ -178,16 +196,9 @@
 .form-title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #2d3748;
+  color: #e53e3e; /* Color principal rojo */
   margin-bottom: 1.5rem;
   text-align: center;
-}
-
-.variants-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 1rem;
 }
 
 /* Campos del formulario */
@@ -206,16 +217,16 @@
 /* Inputs y selects */
 .form-input {
   padding: 0.75rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #fed7d7; /* Borde rojo claro */
   border-radius: 0.375rem;
   font-size: 1rem;
   transition: all 0.2s;
 }
 
 .form-input:focus {
-  border-color: #4299e1;
+  border-color: #e53e3e; /* Borde rojo en focus */
   outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
 }
 
 .form-textarea {
@@ -229,7 +240,7 @@
   flex-direction: column;
   gap: 1.5rem;
   padding: 1.5rem;
-  background-color: #f8fafc;
+  background-color: #fef2f2;
   border-radius: 0.5rem;
 }
 
@@ -251,7 +262,7 @@
 
 .variant-number {
   font-weight: 500;
-  color: #2d3748;
+  color: #e53e3e;
 }
 
 .variant-field {
@@ -267,7 +278,7 @@
 
 .variant-input {
   padding: 0.5rem;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #fed7d7;
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
@@ -296,7 +307,7 @@
 .toggle-slider {
   width: 2.75rem;
   height: 1.5rem;
-  background-color: #e2e8f0;
+  background-color: #fbd38d; /* Naranja claro para contraste */
   border-radius: 9999px;
   position: relative;
   transition: background-color 0.2s;
@@ -315,7 +326,7 @@
 }
 
 .toggle-input:checked + .toggle-slider {
-  background-color: #4299e1;
+  background-color: #e53e3e; /* Rojo cuando está activado */
 }
 
 .toggle-input:checked + .toggle-slider:before {
@@ -331,9 +342,9 @@
 /* Botones */
 .add-variant-btn {
   padding: 0.75rem;
-  background-color: #edf2f7;
-  color: #2d3748;
-  border: none;
+  background-color: #fef2f2;
+  color: #c53030;
+  border: 1px solid #fed7d7;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -346,12 +357,12 @@
 }
 
 .add-variant-btn:hover {
-  background-color: #e2e8f0;
+  background-color: #fde8e8;
 }
 
 .submit-btn {
   padding: 1rem;
-  background-color: #4299e1;
+  background-color: #e53e3e;
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -362,18 +373,18 @@
 }
 
 .submit-btn:hover {
-  background-color: #3182ce;
+  background-color: #c53030;
 }
 
 .submit-btn:disabled {
-  background-color: #bee3f8;
+  background-color: #fbb6b6;
   cursor: not-allowed;
 }
 
 .variant-remove-btn {
   background: none;
   border: none;
-  color: #e53e3e;
+  color: #c53030;
   font-size: 0.875rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem;
@@ -381,7 +392,7 @@
 }
 
 .variant-remove-btn:hover {
-  background-color: #fff5f5;
+  background-color: #fef2f2;
 }
 
 /* Mensajes de error */
@@ -406,12 +417,66 @@
   }
 }
 
+/* Botones de acción del formulario */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.submit-btn {
+  background-color: #b71c1c;
+  color: white;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
+}
+
+.submit-btn:hover:enabled {
+  background-color: #8c1616;
+}
+
+.cancel-btn {
+  background-color: #fff;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #f7fafc;
+  border-color: #a0aec0;
+}
+
+
+/* Imagen de previsualización */
+.image-preview img {
+  width: 225px; /* Tamaño fijo de la imagen */
+  height: 225px;
+  object-fit: cover;
+  margin-top: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+}
+
 /* Botón de Cancelar */
 .cancel-btn {
   padding: 1rem;
   background-color: #fff;
   color: #4a5568;
-  border: 1px solid #e2e8f0;
+  border: 1px solid #fed7d7;
   border-radius: 0.375rem;
   font-size: 1rem;
   font-weight: 600;
@@ -422,18 +487,18 @@
 }
 
 .cancel-btn:hover {
-  background-color: #f7fafc;
-  border-color: #cbd5e0;
-  color: #2d3748;
+  background-color: #fef2f2;
+  border-color: #e53e3e;
+  color: #c53030;
 }
 
 .cancel-btn:active {
-  background-color: #edf2f7;
+  background-color: #fde8e8;
 }
 
 .cancel-btn:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(203, 213, 224, 0.5);
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
 }
 
 /* Versión junto con submit (para formularios con ambos botones) */
@@ -461,4 +526,98 @@
   .cancel-btn {
     padding: 0.85rem;
   }
+}
+
+/* Estilos de Órdenes */
+.order-group-card {
+  border: 1px solid #fca5a5; /* Rojo más suave */
+  border-radius: 0.5rem;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.order-customer-info {
+  background-color: #fef2f2; /* Rojo muy claro */
+  padding: 1.25rem;
+  border-bottom: 1px solid #fca5a5;
+}
+
+.order-customer-name {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e53e3e;
+  margin-bottom: 0.5rem;
+}
+
+.order-customer-email {
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+.order-table-container {
+  overflow-x: auto;
+}
+
+.th-image, .td-image {
+    width: 64px;
+    height: 64px;
+}
+
+.th-date {
+    white-space: nowrap;
+}
+
+.product-image {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #fca5a5;
+    max-width: 100%;
+}
+
+.no-image {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fee2e2;
+    color: #b91c1c;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+    border: 1px solid #fca5a5;
+    max-width: 100%;
+}
+
+.order-item-row:hover {
+    background-color: #fffafa;
+}
+
+.order-item-model {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.order-item-details {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.order-item-quantity {
+    white-space: nowrap;
+    font-size: 0.875rem;
+    color: #4b5563;
+    font-weight: 700;
+}
+
+.order-item-date {
+  white-space: nowrap;
+  font-size: 0.875rem;
+  color: #4b5563;
 }
